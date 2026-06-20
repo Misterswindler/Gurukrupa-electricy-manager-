@@ -1,1 +1,189 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GURUKRUPA Electricity Bill Manager</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-hover: #172554;
+            --success: #16a34a;
+            --success-hover: #14532d;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --border: #cbd5e1;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: #f1f5f9; color: var(--dark); padding: 10px; }
+        .container { width: 100%; max-width: 900px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); position: relative; padding-bottom: 60px; }
+        .header-brand { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px double var(--primary); }
+        .header-brand h1 { color: var(--primary); font-size: 24px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
+        .header-brand p { font-size: 13px; color: #64748b; margin-top: 4px; font-weight: 600; }
+        .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px 6px; font-size: 14px; font-weight: 600; background: none; border: none; cursor: pointer; color: #64748b; text-align: center; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); margin-bottom: -2px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .grid-input { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        .input-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+        .date-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        label { font-weight: 600; font-size: 13px; color: #475569; }
+        input, select { padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; width: 100%; background-color: white; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; border-radius: 6px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+        th, td { padding: 12px 10px; border: 1px solid var(--border); text-align: left; font-size: 14px; }
+        th { background-color: #f8fafc; font-weight: 600; }
+        button.btn { color: white; border: none; padding: 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 15px; width: 100%; margin-top: 10px; display: block; }
+        .btn-calc { background-color: var(--primary); }
+        .btn-calc:hover { background-color: var(--primary-hover); }
+        .btn-confirm { background-color: var(--success); margin-top: 15px; }
+        .btn-confirm:hover { background-color: var(--success-hover); }
+        .result-section { margin-top: 25px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; }
+        h3 { font-size: 16px; margin-bottom: 10px; color: #334155; }
+        .footer-credit { position: absolute; bottom: 15px; left: 0; width: 100%; text-align: center; font-size: 12px; color: #94a3b8; font-style: italic; font-weight: 500; letter-spacing: 0.3px; }
+        @media (min-width: 768px) {
+            body { padding: 30px 15px; }
+            .container { padding: 30px; padding-bottom: 70px; }
+            .header-brand h1 { font-size: 30px; }
+            .tab-btn { font-size: 16px; padding: 12px; }
+            .grid-input { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            .full-width { grid-column: span 2; }
+            th, td { padding: 12px 15px; font-size: 15px; }
+            h3 { font-size: 18px; }
+            table { white-space: normal; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header-brand">
+        <h1>GURUKRUPA</h1>
+        <p>Electricity Bill Manager</p>
+    </div>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('calculator')">New Current Readings</button>
+        <button class="tab-btn" onclick="switchTab('history'); syncHistoryFilters();">Logs & Ledger History</button>
+    </div>
+    <div id="calculator" class="tab-content active">
+        <div class="grid-input">
+            <div class="input-group full-width">
+                <label>Billing Cycle Date Selectors</label>
+                <div class="date-split">
+                    <select id="selectMonth">
+                        <option value="January">January</option><option value="February">February</option><option value="March">March</option><option value="April">April</option><option value="May">May</option><option value="June">June</option><option value="July">July</option><option value="August">August</option><option value="September">September</option><option value="October">October</option><option value="November">November</option><option value="December">December</option>
+                    </select>
+                    <select id="selectYear">
+                        <option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="mainElecAmount">Main BESCOM Bill (₹)</label>
+                <input type="number" id="mainElecAmount" step="0.01" value="21165.00">
+            </div>
+            <div class="input-group">
+                <label for="waterBillAmount">Total Water Bill (₹)</label>
+                <input type="number" id="waterBillAmount" step="0.01" placeholder="Enter Total Amount">
+            </div>
+        </div>
+        <h3>Enter Current Readings</h3>
+        <div class="table-responsive"><table id="metersTable"><thead><tr><th>House / Floor</th><th>Fetched Prev Rdg</th><th>New Current Rdg</th></tr></thead><tbody></tbody></table></div>
+        <button class="btn btn-calc" onclick="calculateBill()">Compute Calculations</button>
+        <div id="resultWrapper" style="display: none;" class="result-section">
+            <div class="table-responsive" style="margin-top: 5px;"><table id="resultsTable"><thead><tr><th>Floor</th><th>Units</th><th>Elec (₹)</th><th>Common (₹)</th><th>Water (₹)</th><th>Total (₹)</th></tr></thead><tbody></tbody></table></div>
+            <button class="btn btn-confirm" onclick="confirmAndSaveHistory()">✅ Confirm & Save to History</button>
+        </div>
+    </div>
+    <div id="history" class="tab-content">
+        <div class="grid-input" style="margin-bottom: 20px;">
+            <div class="input-group"><label for="houseSelector">Filter by Floor/Unit:</label><select id="houseSelector" onchange="renderHistoryTab()"></select></div>
+            <div class="input-group"><label for="monthSelector">Filter by Billing Cycle:</label><select id="monthSelector" onchange="renderHistoryTab()"><option value="ALL">All Available Months</option></select></div>
+        </div>
+        <div class="table-responsive"><table><thead><tr><th>Month Cycle</th><th>Prev Rdg</th><th>Curr Rdg</th><th>Units Used</th><th>Total Owed (₹)</th></tr></thead><tbody></tbody></table></div>
+        <button class="btn" style="background-color: #ef4444; width: auto; font-size: 12px; padding: 8px 12px; margin-top: 20px;" onclick="resetToBaseline()">⚠️ Reset Database to Baseline</button>
+    </div>
+    <div class="footer-credit">Designed by Yash Shaikh</div>
+</div>
+<script>
+    const households = ["Terrace", "Third Floor Dak", "Shardha", "2nd Floor Gee", "Shalini", "Ground Floor", "First Floor", "Common Area"];
+    const baselineDb = {
+        "Terrace": [{cycle: "May-June Starting", prev: 881.0, curr: 881.0, consumed: 0.0, totalPaid: 0.0}],
+        "Third Floor Dak": [{cycle: "May-June Starting", prev: 200.2, curr: 200.2, consumed: 0.0, totalPaid: 0.0}],
+        "Shardha": [{cycle: "May-June Starting", prev: 300.8, curr: 300.8, consumed: 0.0, totalPaid: 0.0}],
+        "2nd Floor Gee": [{cycle: "May-June Starting", prev: 259.1, curr: 259.1, consumed: 0.0, totalPaid: 0.0}],
+        "Shalini": [{cycle: "May-June Starting", prev: 233.7, curr: 233.7, consumed: 0.0, totalPaid: 0.0}],
+        "Ground Floor": [{cycle: "May-June Starting", prev: 41.0, curr: 41.0, consumed: 0.0, totalPaid: 0.0}],
+        "First Floor": [{cycle: "May-June Starting", prev: 294.2, curr: 294.2, consumed: 0.0, totalPaid: 0.0}],
+        "Common Area": [{cycle: "May-June Starting", prev: 576.6, curr: 576.6, consumed: 0.0, totalPaid: 0.0}]
+    };
+    let db = {}; let pendingCalculationData = null;
+    function loadDatabase() {
+        const storedData = localStorage.getItem("GURUKRUPA_DB");
+        if (storedData) { try { db = JSON.parse(storedData); } catch(e) { db = JSON.parse(JSON.stringify(baselineDb)); } }
+        else { db = JSON.parse(JSON.stringify(baselineDb)); }
+    }
+    function getLatestReading(house) { if (db[house] && db[house].length > 0) { return db[house][db[house].length - 1].curr; } return 0; }
+    function setAutomaticMonthYear() {
+        const date = new Date(); const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        document.getElementById("selectMonth").value = monthNames[date.getMonth()]; document.getElementById("selectYear").value = date.getFullYear().toString();
+    }
+    function initInterface() {
+        loadDatabase(); setAutomaticMonthYear(); const tbody = document.querySelector("#metersTable tbody"); tbody.innerHTML = "";
+        households.forEach(name => {
+            const prevRdg = getLatestReading(name);
+            tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>${prevRdg.toFixed(1)}</td><td><input type="number" class="curr-input" data-house="${name}" step="0.1" placeholder="Type Next Month Box Value"></td></tr>`;
+        });
+        const houseSelector = document.getElementById("houseSelector"); houseSelector.innerHTML = households.filter(n => n !== "Common Area").map(n => `<option value="${n}">${n}</option>`).join("");
+    }
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active'); event.currentTarget.classList.add('active');
+    }
+    function calculateBill() {
+        const m = document.getElementById("selectMonth").value; const y = document.getElementById("selectYear").value; const cycle = `${m} ${y}`;
+        const totalElecCost = parseFloat(document.getElementById("mainElecAmount").value) || 0; const totalWaterCost = parseFloat(document.getElementById("waterBillAmount").value) || 0;
+        if (totalElecCost <= 0) { alert("Error: Please enter a valid Main BESCOM Bill amount before calculating."); return; }
+        let subMeterUnits = {}; let totalUnits = 0; let batchReadings = {};
+        households.forEach(name => {
+            const prev = getLatestReading(name); const currVal = document.querySelector(`.curr-input[data-house="${name}"]`).value;
+            const curr = currVal !== "" ? parseFloat(currVal) : prev; const consumed = Math.max(0, curr - prev);
+            subMeterUnits[name] = consumed; totalUnits += consumed; batchReadings[name] = { prev, curr, consumed };
+        });
+        if (totalUnits === 0) { alert("Error: No new box readings were processed. Type in new metrics to compute."); return; }
+        const ratePerUnit = totalElecCost / totalUnits; const commonCost = subMeterUnits["Common Area"] * ratePerUnit; const perHouseCommon = commonCost / 7; const perHouseWater = totalWaterCost / 7;
+        const tbody = document.querySelector("#resultsTable tbody"); tbody.innerHTML = "";
+        pendingCalculationData = { cycle, batchReadings, subMeterUnits, ratePerUnit, perHouseCommon, perHouseWater };
+        households.forEach(name => {
+            if (name === "Common Area") return; const units = subMeterUnits[name]; const indivElec = units * ratePerUnit; const total = indivElec + perHouseCommon + perHouseWater;
+            tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>${units.toFixed(1)}</td><td>₹${indivElec.toFixed(2)}</td><td>₹${perHouseCommon.toFixed(2)}</td><td>₹${perHouseWater.toFixed(2)}</td><td><b>₹${total.toFixed(2)}</b></td></tr>`;
+        });
+        document.getElementById("resultWrapper").style.display = "block";
+    }
+    function confirmAndSaveHistory() {
+        if (!pendingCalculationData) return; const { cycle, batchReadings, subMeterUnits, ratePerUnit, perHouseCommon, perHouseWater } = pendingCalculationData;
+        if (db[households[0]].some(log => log.cycle === cycle)) { if (!confirm(`The billing cycle "${cycle}" already exists. Overwrite?`)) return; households.forEach(name => { db[name] = db[name].filter(log => log.cycle !== cycle); }); }
+        households.forEach(name => {
+            const units = subMeterUnits[name]; const indivElec = units * ratePerUnit; const total = name !== "Common Area" ? (indivElec + perHouseCommon + perHouseWater) : 0;
+            db[name].push({ cycle: cycle, prev: batchReadings[name].prev, curr: batchReadings[name].curr, consumed: units, totalPaid: total });
+        });
+        localStorage.setItem("GURUKRUPA_DB", JSON.stringify(db)); alert(`Success! "${cycle}" recorded.`);
+        pendingCalculationData = null; document.getElementById("resultWrapper").style.display = "none"; document.querySelectorAll(".curr-input").forEach(input => input.value = ""); initInterface();
+    }
+    function resetToBaseline() { if (confirm("Clear all history and reset?")) { localStorage.removeItem("GURUKRUPA_DB"); initInterface(); syncHistoryFilters(); } }
+    function syncHistoryFilters() {
+        const monthSelector = document.getElementById("monthSelector"); let activeCycles = new Set();
+        households.forEach(name => { if (db[name]) db[name].forEach(row => activeCycles.add(row.cycle)); });
+        monthSelector.innerHTML = `<option value="ALL">All Available Months</option>`; activeCycles.forEach(cycle => { monthSelector.innerHTML += `<option value="${cycle}">${cycle}</option>`; });
+        renderHistoryTab();
+    }
+    function renderHistoryTab() {
+        const targetHouse = document.getElementById("houseSelector").value; const targetMonth = document.getElementById("monthSelector").value; const tbody = document.querySelector("#history table tbody"); tbody.innerHTML = "";
+        if (!targetHouse || !db[targetHouse]) return;
+        let dataRecords = db[targetHouse]; if (targetMonth !== "ALL") dataRecords = dataRecords.filter(row => row.cycle === targetMonth);
+        dataRecords.forEach(row => { tbody.innerHTML += `<tr><td>${row.cycle}</td><td>${row.prev.toFixed(1)}</td><td>${row.curr.toFixed(1)}</td><td>${row.consumed.toFixed(1)}</td><td><b>₹${row.totalPaid.toFixed(2)}</b></td></tr>`; });
+    }
+    window.onload = initInterface;
+</script>
+</body>
+</html>
